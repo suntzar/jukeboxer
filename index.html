@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Nome Atualizado -->
+        <title>JukeBoxer - Minecraft Disc Pack Studio</title>
+
+        <!-- Dependências -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js" defer></script>
+
+        <!-- Fontes -->
+        <link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+        <style>
+            /* --- Variáveis Globais --- */
+            :root {
+                --primary-color: #10b981; --primary-hover: #059669; --secondary-color: #6b7280;
+                --background-color: #f9fafb; --card-background: #ffffff; --text-color: #1f2937;
+                --label-color: #4b5563; --border-color: #e5e7eb; --success-color: #10b981;
+                --success-hover: #059669; --danger-color: #ef4444; --info-color: #3b82f6;
+                --border-radius: 0.375rem; --spacing-unit: 8px;
+                --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                --font-family-title: "Minecraft", var(--font-family); --feather-icon-size: 1em; --transition-speed: 0.2s;
+            }
+            /* --- Reset & Globals --- */
+            *, *::before, *::after { box-sizing: border-box; }
+            body { font-family: var(--font-family); line-height: 1.6; margin: 0; padding: 0; background-color: var(--background-color); color: var(--text-color); font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+            img { max-width: 100%; display: block; }
+            button, input, textarea, select { font-family: inherit; font-size: 100%; }
+            /* --- Layout --- */
+            .page-header { background-color: var(--card-background); padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 4); border-bottom: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); text-align: center; margin-bottom: calc(var(--spacing-unit) * 4); }
+            .page-header p { font-size: 1.8em; /* Ajustado para <p> */ color: var(--primary-color); margin: 0; display: inline-flex; align-items: center; gap: var(--spacing-unit); font-family: var(--font-family-title); letter-spacing: 1px; }
+            .page-header p .feather { color: var(--primary-color); width: 1.2em; height: 1.2em; }
+            .container { max-width: 1000px; margin: 0 auto; padding: 0 calc(var(--spacing-unit) * 3) calc(var(--spacing-unit) * 4); }
+            .page-footer { text-align: center; margin-top: calc(var(--spacing-unit) * 5); padding: calc(var(--spacing-unit) * 2); font-size: 0.9em; color: var(--secondary-color); border-top: 1px solid var(--border-color); }
+            .page-footer a { color: var(--primary-color); text-decoration: none; }
+            .page-footer a:hover { text-decoration: underline; }
+            /* --- Formulário --- */
+            section { background-color: var(--card-background); padding: calc(var(--spacing-unit) * 3); border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: calc(var(--spacing-unit) * 3); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
+            section h2 { font-size: 1.25em; margin-top: 0; margin-bottom: calc(var(--spacing-unit) * 2.5); padding-bottom: var(--spacing-unit); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: var(--spacing-unit); color: var(--primary-color); font-weight: 600; }
+            section h2 .feather { width: 1.1em; height: 1.1em; }
+            .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: calc(var(--spacing-unit) * 3); }
+            .form-group { margin-bottom: calc(var(--spacing-unit) * 2); }
+            label { display: block; margin-bottom: calc(var(--spacing-unit) * 0.75); font-weight: 500; color: var(--label-color); font-size: 0.9em; }
+            input[type="text"], input[type="number"], textarea, select { width: 100%; padding: calc(var(--spacing-unit) * 1) calc(var(--spacing-unit) * 1.5); border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.95em; background-color: #fff; transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; }
+            input[type="text"]:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+            textarea { min-height: 70px; resize: vertical; }
+            /* File Input */
+            .file-input-wrapper { margin-top: calc(var(--spacing-unit) * 0.5); }
+            .file-input-group { display: flex; align-items: center; gap: var(--spacing-unit); }
+            .file-input-button { display: inline-flex; align-items: center; gap: calc(var(--spacing-unit) * 0.75); padding: calc(var(--spacing-unit) * 0.75) calc(var(--spacing-unit) * 1.5); background-color: var(--secondary-color); color: white; border: none; border-radius: var(--border-radius); cursor: pointer; font-size: 0.85em; font-weight: 500; white-space: nowrap; transition: background-color var(--transition-speed) ease; }
+            .file-input-button:hover { background-color: #4b5563; }
+            .file-input-button input[type="file"] { display: none; }
+            .file-input-button .feather { width: 0.9em; height: 0.9em; stroke-width: 2.5; }
+            .file-name-display { font-style: italic; color: var(--label-color); font-size: 0.85em; margin-left: var(--spacing-unit); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1; }
+            .image-preview { max-width: 40px; max-height: 40px; border: 1px dashed var(--border-color); border-radius: var(--border-radius); object-fit: contain; margin-left: auto; }
+            .image-preview.hidden { display: none; }
+            /* Discos */
+            .disc-panel { margin-top: calc(var(--spacing-unit) * 2); display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: calc(var(--spacing-unit) * 2.5); }
+            .disc-card { background-color: var(--card-background); border: 1px solid var(--border-color); border-radius: var(--border-radius); overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); transition: box-shadow var(--transition-speed) ease; }
+            .disc-card:hover { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.07); }
+            .disc-header { display: flex; align-items: center; padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 2); background-color: #f9fafb; border-bottom: 1px solid var(--border-color); }
+            .disc-texture-display { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; border-radius: 3px; flex-shrink: 0; margin-right: calc(var(--spacing-unit) * 1.5); }
+            .disc-header h3 { font-size: 1.05em; margin: 0; flex-grow: 1; font-weight: 600; color: var(--text-color); }
+            .disc-header .disc-id { font-size: 0.8em; color: var(--secondary-color); margin-left: var(--spacing-unit); font-weight: 400; }
+            .disc-controls { padding: calc(var(--spacing-unit) * 2); }
+            .audio-info { font-size: 0.85em; color: var(--label-color); margin-top: calc(var(--spacing-unit) * 0.75); padding-left: calc(var(--spacing-unit) * 0.5); }
+            /* Botão Gerar & Feedback */
+            .generate-button-container { text-align: center; margin-top: calc(var(--spacing-unit) * 3); }
+            .generate-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-unit); padding: calc(var(--spacing-unit) * 1.25) calc(var(--spacing-unit) * 3); background-color: var(--success-color); color: white; border: none; border-radius: var(--border-radius); font-size: 1.1em; font-weight: 600; cursor: pointer; transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+            .generate-button:hover:not(:disabled) { background-color: var(--success-hover); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); }
+            .generate-button:disabled { background-color: var(--secondary-color); cursor: not-allowed; opacity: 0.7; box-shadow: none; }
+            .generate-button .feather { width: 1.1em; height: 1.1em; stroke-width: 2.5; }
+            .loading-spinner { display: inline-block; width: var(--feather-icon-size); height: var(--feather-icon-size); border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s ease-in-out infinite; }
+            @keyframes spin { to { transform: rotate(360deg); } }
+            .loading-spinner.hidden { display: none; }
+            .feedback-message { text-align: center; margin-top: calc(var(--spacing-unit) * 2); padding: calc(var(--spacing-unit) * 1.5); border-radius: var(--border-radius); font-size: 0.95em; }
+            .feedback-message.error { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+            .feedback-message.success { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+            .feedback-message:empty { display: none; }
+        </style>
+    </head>
+    <body>
+        <header class="page-header">
+            <p>JukeBoxer</p>
+        </header>
+
+        <main class="container">
+            <form id="pack-form">
+                <section aria-labelledby="pack-info-heading">
+                    <h2 id="pack-info-heading"><i data-feather="info"></i>Informações do Pacote</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="pack-name">Nome do Pacote:</label>
+                            <input type="text" id="pack-name" value="Meu Pacote de Musicas" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="pack-author">Autor (Opcional):</label>
+                            <input type="text" id="pack-author" placeholder="Seu Nome" />
+                        </div>
+                        <div class="form-group">
+                            <label for="pack-version">Versão do Pacote (X.Y.Z):</label>
+                            <input type="text" id="pack-version" value="1.0.0" pattern="\d+\.\d+\.\d+" title="Use o formato X.Y.Z (ex: 1.0.0)" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="min-engine-version">Versão Mínima do Jogo (X.Y.Z):</label>
+                            <input type="text" id="min-engine-version" value="1.16.0" pattern="\d+\.\d+\.\d+" title="Use o formato X.Y.Z (ex: 1.16.0)" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="pack-description">Descrição do Pacote:</label>
+                        <textarea id="pack-description" rows="2" required>Substitui musicas de discos no Minecraft.</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Ícone do Pacote (pack_icon.png, Opcional):</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-input-group">
+                                <label class="file-input-button" for="pack-icon-input">
+                                    <i data-feather="image"></i> Escolher PNG
+                                    <input type="file" id="pack-icon-input" accept="image/png" />
+                                </label>
+                                <span class="file-name-display" id="pack-icon-filename">Nenhum arquivo</span>
+                                <img id="pack-icon-preview" class="image-preview hidden" alt="Previa do icone" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section aria-labelledby="disc-custom-heading">
+                    <h2 id="disc-custom-heading"><i data-feather="sliders"></i>Personalizar Discos</h2>
+                    <p style="font-size: 0.95em; color: var(--label-color); margin-bottom: calc(var(--spacing-unit) * 2)">Para cada disco que deseja substituir, envie um arquivo de áudio <strong>.ogg</strong>. Você pode opcionalmente fornecer um novo nome e uma nova textura <strong>.png</strong>.</p>
+                    <div id="disc-panel" class="disc-panel">
+                        <!-- Cards dos discos -->
+                    </div>
+                </section>
+
+                <div class="generate-button-container">
+                    <button type="button" id="generate-button" class="generate-button">
+                        <i data-feather="download"></i>
+                        Gerar Pacote .mcpack
+                        <span id="loading-indicator" class="loading-spinner hidden"></span>
+                    </button>
+                </div>
+                <div id="feedback-message" class="feedback-message" role="alert"></div>
+            </form>
+        </main>
+
+        <footer class="page-footer">
+            <!-- Nome e URL Atualizados -->
+            JukeBoxer © <script> document.write(new Date().getFullYear()); </script>.
+            <a href="https://github.com/suntzar/jukeboxer" target="_blank">Visite o Projeto</a>.
+        </footer>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                // --- Seletores DOM ---
+                const packForm = document.getElementById("pack-form");
+                const packNameInput = document.getElementById("pack-name");
+                const packAuthorInput = document.getElementById("pack-author");
+                const packDescInput = document.getElementById("pack-description");
+                const packVersionInput = document.getElementById("pack-version");
+                const minEngineVersionInput = document.getElementById("min-engine-version");
+                const packIconInput = document.getElementById("pack-icon-input");
+                const packIconFilename = document.getElementById("pack-icon-filename");
+                const packIconPreview = document.getElementById("pack-icon-preview");
+                const discPanel = document.getElementById("disc-panel");
+                const generateButton = document.getElementById("generate-button");
+                const loadingIndicator = document.getElementById("loading-indicator");
+                const feedbackMessageDiv = document.getElementById("feedback-message");
+
+                // --- Constantes ---
+                const vanillaDiscs = [
+                    { id: "5", name: "Samuel Aberg - 5", texture: "record_5.png", sound: "5.ogg", duration: "2:00" },
+                    { id: "11", name: "C418 - 11", texture: "record_11.png", sound: "11.ogg", duration: "1:11" },
+                    { id: "13", name: "C418 - 13", texture: "record_13.png", sound: "13.ogg", duration: "2:58" },
+                    { id: "blocks", name: "C418 - blocks", texture: "record_blocks.png", sound: "blocks.ogg", duration: "5:45" },
+                    { id: "cat", name: "C418 - cat", texture: "record_cat.png", sound: "cat.ogg", duration: "3:05" },
+                    { id: "chirp", name: "C418 - chirp", texture: "record_chirp.png", sound: "chirp.ogg", duration: "3:05" },
+                    { id: "far", name: "C418 - far", texture: "record_far.png", sound: "far.ogg", duration: "2:54" },
+                    { id: "mall", name: "C418 - mall", texture: "record_mall.png", sound: "mall.ogg", duration: "3:17" },
+                    { id: "mellohi", name: "C418 - mellohi", texture: "record_mellohi.png", sound: "mellohi.ogg", duration: "1:36" },
+                    { id: "otherside", name: "Lena Raine - otherside", texture: "record_otherside.png", sound: "otherside.ogg", duration: "3:14" },
+                    { id: "pigstep", name: "Lena Raine - Pigstep", texture: "record_pigstep.png", sound: "pigstep.ogg", duration: "2:28" },
+                    { id: "stal", name: "C418 - stal", texture: "record_stal.png", sound: "stal.ogg", duration: "2:30" },
+                    { id: "strad", name: "C418 - strad", texture: "record_strad.png", sound: "strad.ogg", duration: "3:08" },
+                    { id: "wait", name: "C418 - wait", texture: "record_wait.png", sound: "wait.ogg", duration: "3:58" },
+                    { id: "ward", name: "C418 - ward", texture: "record_ward.png", sound: "ward.ogg", duration: "4:11" }
+                ];
+                const bedrockLangCodes = ["en_US", "en_GB", "de_DE", "es_ES", "es_MX", "fr_FR", "fr_CA", "it_IT", "ja_JP", "ko_KR", "pt_BR", "pt_PT", "ru_RU", "zh_CN", "zh_TW", "nl_NL", "bg_BG", "cs_CZ", "da_DK", "el_GR", "fi_FI", "hu_HU", "id_ID", "nb_NO", "pl_PL", "sk_SK", "sv_SE", "tr_TR", "uk_UA"];
+                // Nome e URL Atualizados
+                const TOOL_NAME = "JukeBoxer";
+                const TOOL_URL = "https://github.com/suntzar/jukeboxer";
+
+                // --- Estado da Aplicação ---
+                let packIconData = null;
+                let discCustomizations = {};
+
+                // --- Funções Auxiliares ---
+                function generateUUIDv4() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); }); }
+                function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => { if (!file) { resolve(null); return; } const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.onerror = (e) => reject(e); reader.readAsArrayBuffer(file); }); }
+                function readFileAsDataURL(file) { return new Promise((resolve, reject) => { if (!file) { resolve(null); return; } const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.onerror = (e) => reject(e); reader.readAsDataURL(file); }); }
+                function isValidVersion(v) { return /^\d+\.\d+\.\d+$/.test(v); }
+                function showFeedback(message, type = 'error') { feedbackMessageDiv.textContent = message; feedbackMessageDiv.className = `feedback-message ${type}`; }
+
+                // --- Renderização da UI ---
+                function renderDiscSelectors() {
+                    discPanel.innerHTML = "";
+                    vanillaDiscs.forEach(disc => {
+                        if (!discCustomizations[disc.id]) { discCustomizations[disc.id] = { newName: "", audioData: null, textureData: null }; }
+                        const card = document.createElement("div"); card.className = "disc-card"; card.dataset.discId = disc.id;
+                        const defaultTexturePath = `items/${disc.texture}`;
+                        // UI com acentuação
+                        card.innerHTML = `
+                            <div class="disc-header">
+                                <img src="${defaultTexturePath}" alt="Textura ${disc.name}" class="disc-texture-display" id="disc-texture-display-${disc.id}" onerror="this.style.opacity='0.5'; this.alt='Imagem padrão não encontrada';">
+                                <h3>${disc.name}<span class="disc-id">(ID: ${disc.id})</span></h3>
+                            </div>
+                            <div class="disc-controls">
+                                <div class="form-group"><label for="disc-name-${disc.id}">Novo Nome (Opcional):</label><input type="text" id="disc-name-${disc.id}" value="${discCustomizations[disc.id].newName}" placeholder="Padrão: '${disc.name}'" aria-label="Novo nome para o disco ${disc.id}"></div>
+                                <div class="form-group"><label>Substituir Música (.ogg): <span style="color:var(--danger-color); font-weight: bold">*</span></label><div class="file-input-wrapper"><div class="file-input-group"><label class="file-input-button" for="disc-audio-${disc.id}"><i data-feather="upload"></i> Escolher OGG<input type="file" id="disc-audio-${disc.id}" accept=".ogg,audio/ogg" aria-label="Selecionar arquivo de áudio para o disco ${disc.id}"></label><span class="file-name-display" id="disc-audio-filename-${disc.id}">Nenhum arquivo</span></div></div><div class="audio-info">Duração Padrão: ${disc.duration}</div></div>
+                                <div class="form-group"><label>Substituir Textura (.png, Opcional):</label><div class="file-input-wrapper"><div class="file-input-group"><label class="file-input-button" for="disc-texture-${disc.id}"><i data-feather="image"></i> Escolher PNG<input type="file" id="disc-texture-${disc.id}" accept="image/png" aria-label="Selecionar arquivo de textura para o disco ${disc.id}"></label><span class="file-name-display" id="disc-texture-filename-${disc.id}">Nenhum arquivo</span></div></div></div>
+                            </div>`;
+                        discPanel.appendChild(card);
+
+                        // Listeners
+                        const nameInput = card.querySelector(`#disc-name-${disc.id}`);
+                        const audioInput = card.querySelector(`#disc-audio-${disc.id}`);
+                        const textureInput = card.querySelector(`#disc-texture-${disc.id}`);
+                        const audioFName = card.querySelector(`#disc-audio-filename-${disc.id}`);
+                        const texFName = card.querySelector(`#disc-texture-filename-${disc.id}`);
+                        const discTextureDisplay = card.querySelector(`#disc-texture-display-${disc.id}`);
+                        discTextureDisplay.dataset.defaultSrc = defaultTexturePath;
+
+                        nameInput.addEventListener("input", e => { discCustomizations[disc.id].newName = e.target.value.trim(); });
+                        audioInput.addEventListener("change", async e => { const f = e.target.files[0]; audioFName.textContent = f ? f.name : "Nenhum arquivo"; discCustomizations[disc.id].audioData = null; if (f) { try { discCustomizations[disc.id].audioData = await readFileAsArrayBuffer(f); } catch (err) { showFeedback(`Erro ao ler áudio '${f.name}': ${err.message}`, 'error'); e.target.value = null; audioFName.textContent = "Erro ao ler"; } } });
+                        textureInput.addEventListener("change", async e => { const f = e.target.files[0]; texFName.textContent = f ? f.name : "Nenhum arquivo"; discCustomizations[disc.id].textureData = null; const dS = discTextureDisplay.dataset.defaultSrc; if (f) { try { const [b, u] = await Promise.all([readFileAsArrayBuffer(f), readFileAsDataURL(f)]); discCustomizations[disc.id].textureData = b; discTextureDisplay.src = u; discTextureDisplay.style.opacity = '1'; discTextureDisplay.alt = `Prévia ${f.name}`; } catch (err) { showFeedback(`Erro ao ler textura '${f.name}': ${err.message}`, 'error'); texFName.textContent = "Erro ao ler"; e.target.value = null; discTextureDisplay.src = dS; discTextureDisplay.style.opacity = '0.5'; discTextureDisplay.alt = `Erro ${f.name}`; } } else { discTextureDisplay.src = dS; discTextureDisplay.style.opacity = '1'; discTextureDisplay.alt = `Textura ${disc.name}`; } });
+                    });
+                    feather.replace();
+                }
+
+                // --- Manipulador de Ícone do Pacote ---
+                packIconInput.addEventListener("change", async e => { const f = e.target.files[0]; packIconFilename.textContent = f ? f.name : "Nenhum arquivo"; packIconPreview.classList.add("hidden"); packIconData = null; if (f) { try { const [b, u] = await Promise.all([readFileAsArrayBuffer(f), readFileAsDataURL(f)]); packIconData = b; packIconPreview.src = u; packIconPreview.classList.remove("hidden"); } catch (err) { showFeedback(`Erro ao ler ícone: ${err.message}`, 'error'); packIconFilename.textContent = "Erro ao ler"; e.target.value = null; } } });
+
+                // --- Lógica de Geração do Pacote ---
+                function findItem(items, pathSegments) { let cL = items; let cI = null; for (const s of pathSegments) { cI = cL.find(i => i.name === s); if (!cI) return null; if (cI.type === "folder") { if (!cI.children) cI.children = []; cL = cI.children; } else if (s !== pathSegments[pathSegments.length - 1]) { return null; } } return cI; }
+                // addItemsToZip sem forçar UTF8
+                function addItemsToZip(zipFolder, items) { items.forEach(item => { if (!item || !item.name) return; if (item.type === "folder") { const nF = zipFolder.folder(item.name); if (item.children?.length) addItemsToZip(nF, item.children); } else if (item.type === "file") { let c=item.content?? ""; zipFolder.file(item.name, c, { binary: !(typeof c === 'string') }); } }); }
+
+                async function generateMcpack() {
+                    showFeedback("", ""); loadingIndicator.classList.remove("hidden"); generateButton.disabled = true;
+
+                    try {
+                        // 1. Validação (Mensagens com acento)
+                        const packName = packNameInput.value.trim(); const packDesc = packDescInput.value.trim(); const packVersion = packVersionInput.value.trim(); const minEngineVersion = minEngineVersionInput.value.trim(); const packAuthor = packAuthorInput.value.trim();
+                        if (!packName || !packDesc) throw new Error("Nome e Descrição são obrigatórios."); if (!isValidVersion(packVersion)) throw new Error("Versão do Pacote inválida."); if (!isValidVersion(minEngineVersion)) throw new Error("Versão Mínima do Jogo inválida.");
+                        const replacedDiscs = Object.entries(discCustomizations).filter(([id, cust]) => cust.audioData !== null); if (replacedDiscs.length === 0) throw new Error("Nenhum disco foi substituído.");
+
+                        // 2. Estrutura Base (license.txt SEM acentos, usando TOOL_NAME e TOOL_URL atualizados)
+                        const licenseContent_ascii = `==== ${TOOL_NAME} License ====\n\nThis Minecraft Bedrock resource pack was generated using the ${TOOL_NAME} tool.\nTool URL: ${TOOL_URL}\nGenerated on: ${new Date().toISOString()}\nPackage Author: ${packAuthor || "Unknown"}\n\nThe included music files belong to their respective owners. This tool only facilitates the packaging process.\nPlease respect copyright laws.\n\n==== Licenca ${TOOL_NAME} ====\n\nEste pacote de recursos do Minecraft Bedrock foi gerado usando a ferramenta ${TOOL_NAME}.\nURL da Ferramenta: ${TOOL_URL}\nGerado em: ${new Date().toLocaleDateString("pt-BR")} ${new Date().toLocaleTimeString("pt-BR")}\nAutor do Pacote: ${packAuthor || "Desconhecido"}\n\nOs arquivos de musica incluidos pertencem aos seus respectivos proprietarios. Esta ferramenta apenas facilita o processo de empacotamento.\nPor favor, respeite as leis de direitos autorais.\n`;
+                        let structure = [
+                            { name: "manifest.json", type: "file", content: "" },
+                            { name: "license.txt", type: "file", content: licenseContent_ascii },
+                            { name: "textures", type: "folder", children: [{ name: "items", type: "folder", children: [] }] },
+                            { name: "texts", type: "folder", children: [] },
+                            { name: "sounds", type: "folder", children: [{ name: "music", type: "folder", children: [{ name: "game", type: "folder", children: [{ name: "records", type: "folder", children: [] }] }] }] }
+                        ];
+
+                        // 3. Manifest
+                        const manifest = { format_version: 2, header: { name: packName, description: packDesc, uuid: generateUUIDv4(), version: packVersion.split('.').map(Number), min_engine_version: minEngineVersion.split('.').map(Number) }, modules: [{ description: "Resources", type: "resources", uuid: generateUUIDv4(), version: packVersion.split('.').map(Number) }] };
+                        findItem(structure, ["manifest.json"]).content = JSON.stringify(manifest, null, 2);
+
+                        // 4. Ícone
+                        if (packIconData) { structure.splice(1, 0, { name: "pack_icon.png", type: "file", content: packIconData }); }
+
+                        // 5. Discos, Texturas (Dinâmico) e Traduções
+                        const langFileContents = {};
+                        const texturesItemsFolder = findItem(structure, ["textures", "items"]);
+                        const soundsRecordsFolder = findItem(structure, ["sounds", "music", "game", "records"]);
+
+                        for (const [discId, custom] of replacedDiscs) {
+                            const vanillaInfo = vanillaDiscs.find(d => d.id === discId); if (!vanillaInfo) continue;
+                            soundsRecordsFolder.children.push({ name: vanillaInfo.sound, type: 'file', content: custom.audioData });
+                            if (custom.textureData) { texturesItemsFolder.children.push({ name: vanillaInfo.texture, type: 'file', content: custom.textureData }); }
+                            const displayName = custom.newName || vanillaInfo.name; // Usa nome vanilla (sem acento) como fallback
+                            const entry = `item.record_${discId}.desc=${displayName}\t#`;
+                            bedrockLangCodes.forEach(lCode => { if (!langFileContents[lCode]) langFileContents[lCode] = ""; if (langFileContents[lCode].length > 0) langFileContents[lCode] += "\n"; langFileContents[lCode] += entry; });
+                        }
+
+                        // Adiciona Arquivos .lang
+                        const textsFolder = findItem(structure, ["texts"]);
+                        bedrockLangCodes.forEach(lCode => { if (langFileContents[lCode]?.trim()) { textsFolder.children.push({ name: `${lCode}.lang`, type: 'file', content: langFileContents[lCode] }); } });
+
+                        // 6. Gera ZIP
+                        const zip = new JSZip(); addItemsToZip(zip, structure);
+                        const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", level: 9 });
+
+                        // 7. Salva .mcpack
+                        const blobToSave = new Blob([zipBlob], { type: "application/octet-stream" }); let fNameBase = packName.replace(/[^a-z0-9_\-]/gi, '_').toLowerCase() || 'custom_music'; const fName = `${fNameBase}_v${packVersion}.mcpack`; saveAs(blobToSave, fName);
+
+                        showFeedback("Pacote .mcpack gerado com sucesso!", "success"); // Mensagem com acento
+
+                    } catch (error) { console.error("Gen Error:", error); showFeedback(`Erro: ${error.message}`, 'error'); } // Mensagem com acento
+                    finally { loadingIndicator.classList.add("hidden"); generateButton.disabled = false; }
+                }
+
+                // --- Inicialização ---
+                renderDiscSelectors();
+                generateButton.addEventListener("click", generateMcpack);
+                feather.replace();
+
+            });
+        </script>
+    </body>
+</html>
